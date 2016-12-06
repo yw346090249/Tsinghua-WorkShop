@@ -10,7 +10,7 @@ Machine learning, which facilitates predictive analytics using large volumes of 
 
 [Azure Machine Learning](https://azure.microsoft.com/en-us/services/machine-learning/) is a cloud-based predictive-analytics service that offers a streamlined experience for data scientists of all skill levels. It's accompanied by the Azure Machine Learning Studio (ML Studio), which is a browser-based tool that provides an easy to use, drag-and-drop interface for building machine-learning models. It comes with a library of time-saving experiments and features best-in-class algorithms developed and tested in the real world by Microsoft businesses such as Bing. And its built-in support for [R](https://www.r-project.org/) and [Python](https://www.python.org/) means you can build custom scripts  to customize your model. Once you've built and trained your model in the ML Studio, you can easily expose it as a Web service that is consumable from a variety of programming languages, or share it with the community by placing it in the [Cortana Intelligence Gallery](https://gallery.cortanaintelligence.com/).
 
-In this lab, you will use Azure Machine Learning to build, train, and score a model that recognizes hand-written numeric digits. You will use a real OCR data set published for academic research. After deploying the model as a Web service, you will write a [Universal Windows Platform](https://msdn.microsoft.com/en-us/windows/uwp/get-started/whats-a-uwp) (UWP) client for it that lets you sketch digits on the screen and then consult Azure Machine Learning to see if it can identify the digits you sketched. You'll learn how to build and train a model, as well as how to write code that leverages the model.
+In this lab, you will use Azure Machine Learning to build, train, and score a model that recognizes hand-written numeric digits. You will use a real OCR data set published for academic research. After deploying the model as a Web service, you will write an [Electron](http://electron.atom.io/) client for it that lets you sketch digits on the screen and then consult Azure Machine Learning to see if it can identify the digits you sketched. You'll learn how to build and train a model, as well as how to write code that leverages the model.
 
 <a name="Objectives"></a>
 ### Objectives ###
@@ -27,7 +27,8 @@ In this hands-on lab, you will learn how to:
 The following are required to complete this hands-on lab:
 
 - An active Microsoft Azure subscription. If you don't have one, [sign up for a free trial](http://aka.ms/WATK-FreeTrial).
-- [Visual Studio 2015 Community edition](https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx) or higher with the Windows 10 SDK installed
+- [Visual Studio Code](http://code.visualstudio.com/)
+- [Node.js](https://nodejs.org/en/)
 
 ---
 <a name="Exercises"></a>
@@ -40,7 +41,7 @@ This hands-on lab includes the following exercises:
 - [Exercise 3: Train a classification model](#Exercise3)
 - [Exercise 4: Score the model](#Exercise4)
 - [Exercise 5: Deploy the model as a Web service](#Exercise5)
-- [Exercise 6: Build a universal Windows client](#Exercise6)
+- [Exercise 6: Build an Electron client](#Exercise6)
 - [Exercise 7: Test the model](#Exercise7)
 
 Estimated time to complete this lab: **60** minutes.
@@ -344,331 +345,472 @@ Once you have a trained and scored model, you can deploy it as a Web service and
 A common question regarding Azure ML Web services is: how much do they cost? You can find the current pricing information in the [Machine Learning Pricing](https://azure.microsoft.com/en-us/pricing/details/machine-learning/) page.
 
 <a name="Exercise6"></a>
-## Exercise 6: Build a universal Windows client
+## Exercise 6: Build an Electron client
 
-The whole reason for deploying an Azure ML model as a Web service is so you can build smart apps that utilize the model. There are a variety of ways to build such apps. You could call the service from a Web app using JavaScript and AJAX, for example, or you could use Visual Studio to write a [Xamarin](https://www.xamarin.com/) app that runs on iOS, Android, and Windows and places calls to the service using .NET's HttpClient class.
+The whole reason for deploying an Azure ML model as a Web service is so you can build smart apps that utilize the model. There are a variety of ways to build such apps. You could call the service from a Web app using JavaScript and AJAX, for example, or you could use [NativeScript](https://www.nativescript.org/) to write an app that runs on iOS or Android and places calls to the service using HTTP requests.
 
-In this exercise, you will write a client app that targets the [Universal Windows Platform](https://msdn.microsoft.com/en-us/windows/uwp/get-started/whats-a-uwp), or UWP. The beauty of such apps is that they run on a variety of Windows devices, including PCs, tablets, phones, and even on Xbox One. The app you will write enables you to draw digits into an onscreen grid. Then it calls your ML Web service and tells you what digit you drew.
+In this exercise, you will write a cross-platform client app using [Node.js](https://nodejs.org) and [Electron](http://electron.atom.io/). The beauty of such apps is that they run on Windows, Mac, or Linux machines. The app you will write enables you to draw digits into an onscreen grid. Then it calls your ML Web service and tells you what digit you drew.
 
-1. In order to build and run UWP apps on a Windows 10 PC, you must enable developer mode on the device. To ensure that developer mode is enabled, click the **Windows** button (also known as the Start button) in the lower-left corner of the desktop. Then select **Settings** from the menu and click **Update & security** in the "Settings" dialog. Now click **For developers** on the left and select **Developer mode** on the right, as shown below.
+1. Create a new directory to serve as your project directory.
 
-    ![Enabling developer mode in Windows 10](Images/enable-developer-mode.png)
+1. Open a terminal or Command Prompt window and navigate to the directory you created in the previous step to make it the current directory.
 
-    _Enabling developer mode in Windows 10_
+1. Execute the following command to verify that you have Node.js version 4 or higher installed. (If Node is installed, you will see the version number.) If Node is not installed or the version is less than 4, go to https://nodejs.org and install the latest stable version.
+ 
+    <pre>
+    node --version
+    </pre>
 
-1. Start Visual Studio 2015 and use the **File -> New -> Project** command to create a new **Blank App (Universal Windows)** project named "MLClient."
+1. Use the following command to create a new Node.js project.
+ 
+    <pre>
+    npm init -y
+    </pre>
 
-    ![Creating a new UWP project](Images/new-universal-app.png)
+    This will create an empty **package.json** file in the current directory.
 
-    _Creating a new UWP project_
+	> Node.js uses a package manager, called **npm**, to add additional components to Node.js applications. These additional components are dependencies of your application and are defined in the **package.json** file. Some dependencies are just needed when building the application, but others are required to actually run it. You will use several dependencies in your Electron application.
+       
+1. In the Command Prompt or terminal window, execute the following command (note the space and the period at the end of the command) to start Visual Studio Code in the current directory:
 
-1. Click **OK** to accept the default target version and minimum version.
+	<pre>
+	code .
+	</pre>
 
-    ![Selecting UWP versions](Images/specify-uwp-version.png)
+1. In Visual Studio Code, select the **Explorer** command from the **View** menu to make sure the Explorer panel is displayed. Then click **Package.json** to open the file for editing.
 
-    _Selecting UWP versions_
+    ![Opening package.json](Images/node-open-package-json.png)
 
-1. In the Solution Explorer window, right-click the **MLClient** project and select **Manage NuGet Packages...**
+    _Opening package.json_
+    
+1. Add the *dependencies* and *devDependencies* sections shown below to **package.json**. You can insert these starting on line 2 if you would like.
+               
+    ```javascript
+    {
+      "dependencies": {
+        "@angular/common": "2.0.0",
+        "@angular/compiler": "2.0.0",
+        "@angular/core": "2.0.0",
+        "@angular/forms": "2.0.0",
+        "@angular/http": "2.0.0",
+        "@angular/platform-browser": "2.0.0",
+        "@angular/platform-browser-dynamic": "2.0.0",
+        "@types/core-js": "^0.9.34",
+        "@types/jasmine": "^2.2.34",
+        "@types/node": "^6.0.41",
+        "core-js": "^2.4.1",
+        "reflect-metadata": "^0.1.3",
+        "rxjs": "5.0.0-beta.12",
+        "systemjs": "0.19.27",
+        "zone.js": "^0.6.23"
+      },
+      "devDependencies": {
+        "electron": "^1.4.0",
+        "npm-run-all": "^3.1.0",
+        "typescript": "^2.0.3"
+      },
+      ...
+    }
+    ```
 
-    ![Managing NuGet Packages for the project](Images/manage-nuget-packages.png)
+    This brings a number of important dependencies into the application. Everything under the *dependencies* property is associated with the [Angular](https://angular.io/) framework and related TypeScript definitions. Angular is a client framework that simplifies JavaScript applications. It provides functionality for implementing user interfaces and also for calling Web services. The *devDependencies* property defines other components used by the application.
+     
+    > You will be using [TypeScript](https://www.typescriptlang.org/) to code the application. TypeScript is a superset of JavaScript, so the code should look familiar to you. You will use some TypeScript-specific features, such as [decorators](https://www.typescriptlang.org/docs/handbook/decorators.html). (While this is not an absolute requirement, it does simplify the Angular code a bit.)
+      
+1. Replace the *scripts* property in **package.json** with the following *scripts* property. Then save your changes to **package.json**.
+       
+    ```javascript
+    {
+      ...
+      "scripts": {
+        "start": "npm-run-all --parallel electron tsc:w",
+        "electron": "electron .",
+        "tsc": "tsc",
+        "tsc:w": "tsc -w"
+      },
+      ...
+    }
+    ```
 
-    _Managing NuGet Packages for the project_
+1. Place the mouse cursor over the project directory in Visual Studio Code's Explorer panel and click the **New File** button to add a new file to the project. Name the file **tsconfig.json**.
 
-	> NuGet is a free and open-source package manager for Microsoft development platforms. It provides access to thousands of libraries, or *packages*, containing code to perform a variety of tasks. It is integrated into Visual Studio 2015, which makes it easy to add NuGet packages to your project and make a lot of things happen without writing a lot of code.
+    ![Adding a file to the project](Images/node-new-file.png)
 
-1. Click **Browse**. Then type "webapi.client" (without quotation marks) into the search box. Click **Microsoft.AspNet.WebApi.Client** to select the Web API client package from NuGet. Finally, click **Install** to install the latest stable version of the package. This package contains helper APIs that your app will use to communicate with the Web service. Click **OK** if you're prompted to review changes, and **I Accept** when prompted to accept licenses for the downloaded packages.
+    _Adding a file to the project_
 
-    ![Installing the Web API Client](Images/install-webapi-client.png)
+1. To give TypeScript information about how to build the application, paste the following statements into **tsconfig.json**. Then save your changes.
 
-    _Installing the Web API Client_
+    ```javascript
+    {
+      "compilerOptions": {
+        "target": "es5",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "sourceMap": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "removeComments": false,
+        "noImplicitAny": false
+      }
+    }
+    ```
 
-1. Right-click the **MLClient** project in the Solution Explorer window and select **Add -> Class** to add a class to the project. In the ensuing dialog, type "StringTable.cs" (without quotation marks) into the **Name** box and click **Add**.
+1. Return to the Command Prompt or terminal window and execute the following command to install the dependencies that you defined:
+ 
+    <pre>
+    npm install
+    </pre>
 
-    ![Adding a StringTable class](Images/add-stringtable-class.png)
+1. Now it is time to write the application itself. As a first step, use Visual Studio Code to create a file named **index.html** in the project directory and insert the following statements:
 
-    _Adding a StringTable class_
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>DX Machine Learning Lab</title>
+        <link rel="stylesheet" href="main.css">
+        <script src="node_modules/core-js/client/shim.min.js"></script>
+        <script src="node_modules/zone.js/dist/zone.js"></script>
+        <script src="node_modules/reflect-metadata/Reflect.js"></script>
+        <script src="node_modules/systemjs/dist/system.src.js"></script>
+        <script src="system.config.js"></script>
+        <script>
+            System.import('app').catch(function(err){ console.error(err); });
+        </script>
+    </head>
+    <body>
+    <my-app>Loading ...</my-app>
+    </body>
+    </html>
+    ```
 
-1. Implement the StringTable class as follows:
+1. Now create a file named **main.css** in the project directory and add the following style definitions:
+ 
+    ```css
+    .pixel-grid {
+        -webkit-user-select: none;
+        user-select: none;
+        cursor: pointer;
+    }
+    
+    .pixel-grid > div {
+        margin: 0;
+        padding: 0;
+        display: block;
+    }
+    
+    .pixel-grid > div > div {
+        margin: 0 2px;
+        padding: 0;
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        background-color: #CCCCFF;
+    }
+    
+    .pixel-grid div.selected {
+        background-color: #0000FF;
+    }
+    ```
 
-	```C#
-	class StringTable
-	{
-	    public string[] ColumnNames { get; set; }
-	    public string[,] Values { get; set; }
-	}
-	```
+1. Your app will use [System.js](https://github.com/systemjs/systemjs), a universal dynamic module loader for JavaScript, to load scripts. System.js relies on a configuration file for loading JavaScript files. Add that configuration file to the project by creating a file named **system.config.js** in the project directory and adding the following code:
+   
+    ```javascript
+    (function (global) {
+        System.config({
+            paths: {
+                'npm:': 'node_modules/'
+            },
+            map: {
+                'app': '.',
+                '@angular/core': 'npm:@angular/core/bundles/core.umd.js',
+                '@angular/common': 'npm:@angular/common/bundles/common.umd.js',
+                '@angular/compiler': 'npm:@angular/compiler/bundles/compiler.umd.js',
+                '@angular/platform-browser': 'npm:@angular/platform-browser/bundles/platform-browser.umd.js',
+                '@angular/platform-browser-dynamic': 'npm:@angular/platform-browser-dynamic/bundles/platform-browser-dynamic.umd.js',
+                '@angular/http': 'npm:@angular/http/bundles/http.umd.js',
+                '@angular/forms': 'npm:@angular/forms/bundles/forms.umd.js',
+                'rxjs': 'npm:rxjs'
+            },
+            packages: {
+                app: {
+                    main: './application.js',
+                    defaultExtension: 'js'
+                },
+                rxjs: {
+                    defaultExtension: 'js'
+                }
+            }
+        });
+    })(this);
+    ```
 
-1. Open **MainPage.xaml** and find the empty Grid element highlighted below.
+1. Electron needs a main startup file. The startup file performs the initial configuration of the application, responds to application events (such as the user closing the application), and loads the initial user interface. Create a file named **main.ts** in the project directory (the .ts extension is for TypeScript) and add the following statements to it:
+ 
+    ```typescript
+    const {app, BrowserWindow} = require('electron');
+    
+    let win = null;
+    
+    app.on('ready', () => {
+        createWindow();
+    });
+    
+    app.on('window-all-closed', () => {
+        if (process.platform !== 'darwin') {
+            app.quit();
+        }
+    });
+    
+    app.on('activate', () => {
+        if (win === null) {
+            createWindow();
+        }
+    });
+    
+    function createWindow() {
+    
+        win = new BrowserWindow({width: 800, height: 600});
+        win.loadURL(`file://${__dirname}/index.html`);
+        win.on('closed', () => {
+            win = null
+        });
+    
+        //win.webContents.openDevTools();
+    }
+    ```
 
-    ![The empty Grid element](Images/empty-grid-element.png)
+    > You can uncomment the call to *win.webContents.openDevTools()* if you want the [Chrome Developer Tools](https://developer.chrome.com/devtools) to be opened automatically when you start the application.  This is helpful for debugging if things go wrong with your application.
 
-    _The empty Grid element_
+1. Electron needs to know which file is the main startup file. This is specified in **package.json**. Change the *main* property in that file to the following:
+       
+    ```javascript
+    "main": "main.js",
+    ```
 
-1. Replace the empty Grid with the following markup:
+    **main.js** gets created when the TypeScript file **main.ts** gets compiled into JavaScript.     
+     
+1. Now comes the Angular application that displays the grid, handles mouse clicks, and calls the ML Web service you set up. Add an **application.ts** file to the project directory and add the following statements:
+     
+    ```typescript
+    import { NgModule, Component, HostListener } from '@angular/core';
+    import { BrowserModule } from '@angular/platform-browser';
+    import { HttpModule, Http, Headers, RequestOptions } from '@angular/http';
+    import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+    import 'rxjs/add/operator/map';
+    
+    const GridSize: number = 8;
+    
+    function forEachIndex(count: number, callback: (idx: number) => void) {
+        for(let idx = 0; idx < count; idx += 1) {
+            callback(idx);
+        }
+    }
+    function mapByIndex(count: number, callback: (idx: number) => any) {
+        let items = new Array(count);
+        forEachIndex(count, idx => {
+            items[idx] = callback(idx);
+        });
+        return items;
+    }
+    
+    @Component({
+        selector: 'pixel-grid',
+        template: `
+            <div class="pixel-grid">
+                <div *ngFor="let row of rows">
+                    <div *ngFor="let col of cols"
+                         [ngClass]="{ selected: grid[row*gridSize+col] }"
+                         (mousedown)="selectPixel(row, col, true)"
+                         (mouseover)="selectPixel(row, col)">
+                    </div>
+                </div>
+            </div>
+            <div>
+                <button (click)="submitGrid()">Submit</button>
+                <button (click)="clearGrid()">Clear</button>
+            </div>
+            <div *ngIf="result">
+                Azure ML says you entered a {{result}}
+            </div>
+            <div *ngIf="requestError"><pre>{{requestError | json}}</pre></div>
+        `
+    })
+    class PixelGrid {
+    
+        isMouseButtonDown: boolean = false;
+        gridSize: number = GridSize;
+        grid: boolean[];
+        rows: number[];
+        cols: number[];
+        result: string = null;
+        requestError: any = null;
+    
+        constructor(private http: Http) {
+            this.rows = new Array(GridSize);
+            this.cols = new Array(GridSize);
+            forEachIndex(GridSize, idx => {
+                this.rows[idx] = idx;
+                this.cols[idx] = idx;
+            });
+            this.clearGrid();
+        }
+    
+        @HostListener('document:mousedown', [])
+        onMouseDown() {
+            this.isMouseButtonDown = true;
+        }
+    
+        @HostListener('document:mouseup', [])
+        onMouseUp() {
+            this.isMouseButtonDown = false;
+        }
+    
+        selectPixel(row, col, select = false) {
+            if(this.isMouseButtonDown || select) {
+                this.grid[row * GridSize + col] = true;
+            }
+        }
+    
+        clearGrid() {
+            this.grid = new Array(GridSize * GridSize);
+            forEachIndex(GridSize * GridSize, idx => {
+                this.grid[idx] = false;
+            });
+            this.result = null;
+            this.requestError = null;
+        }
+    
+        submitGrid() {
+    
+            let columnNames = mapByIndex(GridSize * GridSize + 1, idx => {
+                let paramIdx = "0" + (idx + 1);
+                return "p" + paramIdx.substr(paramIdx.length - 2);
+            });
+            columnNames[GridSize * GridSize] = "digit";
+    
+            let values = mapByIndex(GridSize * GridSize + 1, idx => {
+                return this.grid[idx] ? 16 : 0;
+            });
+            values[GridSize * GridSize] = 0;
+    
+            let request = {
+                inputs: {
+                    input1: {
+                        columnNames,
+                        values: [values]
+                    }
+                },
+                globalParameters: {
+                }
+            };
+            console.log('-----Request------');
+            console.log(JSON.stringify(request, null, 2));
+    
+            this.postRequest(request);
+        }
+    
+        postRequest(request: any) {
+    
+            const url = 'web_service_url';
+            const apiKey = 'api_key';
+    
+            let body = JSON.stringify(request);
+            let headers = new Headers({
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            });
+            let options = new RequestOptions({
+                headers: headers
+            });
+    
+            this.result = null;
+            this.requestError = null;
+            this.http
+                .post(url, body, options)
+                .map(res => res.json())
+                .subscribe({
+                    next: (value) => {
+                        console.log('-----Response------');
+                        console.log(JSON.stringify(value, null, 2));
+                        let valuesList = value.Results.output1.value.Values[0];
+                        this.result = valuesList[valuesList.length - 1];
+                    },
+                    error: (error) => {
+                        this.requestError = error.json() || error;
+                    }
+                });
+        }
+    }
+    
+    @Component({
+        selector: 'my-app',
+        template: `
+            <h2>Draw a digit from 0 to 9</h2>
+            <pixel-grid></pixel-grid>
+        `
+    })
+    class AppComponent {
+    }
+    
+    @NgModule({
+        imports: [ BrowserModule, HttpModule ],
+        declarations: [ AppComponent, PixelGrid ],
+        bootstrap: [ AppComponent ]
+    })
+    class AppModule { }
+    
+    const platform = platformBrowserDynamic();
+    platform.bootstrapModule(AppModule);
+    ```
+     
+    The heart of the application is the PixelGrid component, which displays a two-dimensional grid in which the user draws digits and manages an array of Boolean values indicating the on/off state of each square in the grid. It also handles clicks of the **Submit** and **Clear** buttons. The **Submit** button submits the input data to the ML Web service.
+    
+1. The application needs the API Key and URL for your Web service. Modify **application.ts** by replacing *web_service_url* on line 120 with the Web service URL you saved in Exercise 5, Step 7, and replacing *api_key* on line 121 with the API key you saved in Exercise 5, Step 5.
 
-	```xaml
-	<StackPanel VerticalAlignment="Center">
-	    <TextBlock Text="Draw a digit from 0 to 9" FontSize="28" Margin="0,0,0,8" HorizontalAlignment="Center" />
-	    <Grid x:Name="Cells" Width="400" Height="400">
-	        <!-- Empty cell grid filled programmatically -->
-	    </Grid>
-	    <Button Content="Submit" Width="400" Height="100" FontSize="32" Margin="0,16,0,0" HorizontalAlignment="Center" Click="OnSubmit" />
-	    <Button Content="Clear" Width="400" Height="100" FontSize="32" Margin="0,16,0,0" HorizontalAlignment="Center" Click="OnClear" />
-	</StackPanel>
-	```
+    ```typescript
+    const url = 'web_service_url';
+    const apiKey = 'api_key';
+    ```
 
-	> The markup that you just inserted is [Extensible Application Markup Language](https://msdn.microsoft.com/en-us/library/cc189036(VS.95).aspx), or XAML. XAML is a language created by Microsoft for building user interfaces. It was originally created for WPF, but has since been repurposed for universal Windows apps. Combined with [Xamarin Forms](https://www.xamarin.com/forms), it can even be used to build user interfaces for iOS and Android. It is an extremely expressive language that enjoys designer support in Visual Studio and other popular tools.
+1. Use Visual Studio Code's **File -> Save All** command to save all of your changes. Then return to the Command Prompt or terminal window and compile the application by executing the following command:
+         
+    <pre>
+    npm run tsc
+    </pre>
 
-1. Now open **MainPage.xaml.cs** and add the following using statements to those already at the top of the page:
-
-	```C#
-	using Windows.UI.Xaml.Shapes;
-	using Windows.UI;
-	using Windows.Devices.Input;
-	using System.Net.Http;
-	using System.Net.Http.Headers;
-	using System.Threading.Tasks;
-	using Windows.UI.Core;
-	using Windows.UI.Popups;
-	using Newtonsoft.Json;
-	```
-
-1. Still in **MainPage.xaml.cs**, replace everything inside the MainPage class with the following code:
-
-	```C#
-	private const double _margin = 2.0;  // Margin around each cell
-	private const double _opacity = 0.2; // Opacity of empty cells
-	private Rectangle _last;
-
-	public MainPage()
-	{
-	    this.InitializeComponent();
-	
-	    // Add rows and columns to the Grid
-	    for (int i = 0; i < 8; i++)
-	        Cells.ColumnDefinitions.Add(new ColumnDefinition());
-	
-	    for (int j = 0; j < 8; j++)
-	        Cells.RowDefinitions.Add(new RowDefinition());
-	
-	    // Fill the Grid with Rectangles
-	    for (int row = 0; row < 8; row++)
-	    {
-	        for (int col = 0; col < 8; col++)
-	        {
-	            var cell = new Rectangle();
-	            cell.Fill = new SolidColorBrush(Colors.Blue);
-	            cell.Opacity = _opacity;
-	            cell.Margin = new Thickness(_margin);
-	            cell.SetValue(Grid.RowProperty, row);
-	            cell.SetValue(Grid.ColumnProperty, col);
-	            cell.PointerPressed += OnCellPressed;
-	            cell.PointerEntered += OnCellEntered;
-	            Cells.Children.Add(cell);
-	        }
-	    }
-	}
-	
-	private void OnCellPressed(object sender, PointerRoutedEventArgs e)
-	{
-	    if (e.Pointer.PointerDeviceType == PointerDeviceType.Mouse)
-	    {
-	        var point = e.GetCurrentPoint(null);
-	
-	        if (point.Properties.IsLeftButtonPressed)
-	        {
-	            var cell = (Rectangle)sender;
-	            ToggleCell(cell); // Toggle the cell (left mouse button only)
-	            _last = cell;
-	        }
-	    }
-	}
-	
-	private void OnCellEntered(object sender, PointerRoutedEventArgs e)
-	{
-	    var cell = (Rectangle)sender;
-	
-	    if (e.Pointer.PointerDeviceType == PointerDeviceType.Mouse)
-	    {
-	        var point = e.GetCurrentPoint(null);
-	
-	        if (!point.Properties.IsLeftButtonPressed)
-	            return; // Ignore if it's a mouse but not the left button
-	
-	        if (cell == _last)
-	        {
-	            _last = null;
-	            return; // Ignore if it's a mouse but the cell was toggled in OnCellPressed
-	        }
-	    }
-	
-	    ToggleCell(cell);
-	}
-	
-	private void ToggleCell(Rectangle cell)
-	{
-	    cell.Opacity = (cell.Opacity < 1.0) ? 1.0 : _opacity;
-	}
-	
-	private async void OnSubmit(object sender, RoutedEventArgs e)
-	{
-	    // Package up the data
-	    string[] values = new string[65];
-	
-	    for (int row = 0; row < 8; row++)
-	    {
-	        for (int col = 0; col < 8; col++)
-	        {
-	            int index = (row * 8) + col;
-	            values[index] = ((Rectangle)Cells.Children[index]).Opacity == 1.0 ? "16" : "0";
-	        }
-	    }
-	
-	    values[64] = "0"; // digit parameter
-	
-	    try
-	    {
-	        // Call the ML service
-	        await MLSubmitAsync(values);
-	    }
-	    catch(Exception ex)
-	    {
-	        // Let the user know if something went wrong
-	        var dialog = new MessageDialog(ex.Message);
-	        await dialog.ShowAsync();
-	    }
-	}
-	
-	private void OnClear(object sender, RoutedEventArgs e)
-	{
-	    for (int i = 0; i < 64; i++)
-	        ((Rectangle)Cells.Children[i]).Opacity = _opacity;
-	}
-	
-	private async Task MLSubmitAsync(string[] v)
-	{
-	    using (var client = new HttpClient())
-	    {
-	        var request = new
-	        {
-	            Inputs = new Dictionary<string, StringTable>()
-	            {
-	                {
-	                    "input1",
-	                    new StringTable()
-	                    {
-	                        ColumnNames = new string[]
-	                        {
-	                            "p01", "p02", "p03", "p04", "p05", "p06", "p07", "p08",
-	                            "p09", "p10", "p11", "p12", "p13", "p14", "p15", "p16",
-	                            "p17", "p18", "p19", "p20", "p21", "p22", "p23", "p24",
-	                            "p25", "p26", "p27", "p28", "p29", "p30", "p31", "p32",
-	                            "p33", "p34", "p35", "p36", "p37", "p38", "p39", "p40",
-	                            "p41", "p42", "p43", "p44", "p45", "p46", "p47", "p48",
-	                            "p49", "p50", "p51", "p52", "p53", "p54", "p55", "p56",
-	                            "p57", "p58", "p59", "p60", "p61", "p62", "p63", "p64",
-	                            "digit"
-	                        },
-	                        Values = new string[,]
-	                        {
-	                            {
-	                                v[0],  v[1],  v[2],  v[3],  v[4],  v[5],  v[6],  v[7],
-	                                v[8],  v[9],  v[10], v[11], v[12], v[13], v[14], v[15],
-	                                v[16], v[17], v[18], v[19], v[20], v[21], v[23], v[23],
-	                                v[24], v[25], v[26], v[27], v[28], v[29], v[30], v[31],
-	                                v[32], v[33], v[34], v[35], v[36], v[37], v[38], v[39],
-	                                v[40], v[41], v[42], v[43], v[44], v[45], v[46], v[47],
-	                                v[48], v[49], v[50], v[51], v[52], v[53], v[54], v[55],
-	                                v[56], v[57], v[58], v[59], v[60], v[61], v[62], v[63],
-	                                v[64]
-	                            }
-	                        }
-	                    }
-	                },
-	            },
-	            GlobalParameters = new Dictionary<string, string>() { }
-	        };
-	
-	        const string key = "api_key";
-	        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", key);
-	        client.BaseAddress = new Uri("web_service_url");
-	
-	        HttpResponseMessage response = await client.PostAsJsonAsync("", request).ConfigureAwait(false);
-	
-	        // Resumes on background thread, so marshal to the UI thread
-	        await this.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
-	        {
-	            if (response.IsSuccessStatusCode)
-	            {
-	                string json = await response.Content.ReadAsStringAsync();
-	                dynamic result = JsonConvert.DeserializeObject<dynamic>(json);
-	                var digit = result.Results.output1.value.Values[0][75];
-	                var dialog = new MessageDialog(String.Format("Azure ML says you entered a {0}", digit));
-	                await dialog.ShowAsync();
-	            }
-	            else
-	            {
-	                var dialog = new MessageDialog(String.Format("The request failed with status code: {0}", response.StatusCode));
-	                await dialog.ShowAsync();
-	            }
-	        });
-	    }
-	}
-	```
-
-	Admittedly, that's a lot of code. But it packs a lot of punch, too. Here are a few parts of it that you may care to examine more closely:
-
-	- MainPage's class constructor fills the Grid element declared in MainPage.xaml with XAML Rectangles to form an 8x8 grid. XAML elements such as this are normally created declaratively, but in this case, creating them in code prevents MainPage.xaml from being filled with row after row of nearly identical Rectangle elements.
-	- OnCellEntered is the method called when a finger, pen, or mouse (in UWP parlance, a "pointing device") makes contact with any of the 64 Rectangles. Its job: toggle the Rectangle "on" or "off" by changing its opacity.
-	- The OnSubmit method is called when you click the Submit button. It scans the 8x8 grid to determine which squares are "on," and then passes the data to MLSubmit.
-	- MLSubmitAsync is where the magic happens. It uses UWP's HttpClient class to place a REST call to the Web service. It is closely patterned after the C# sample code presented on the Web service's dashboard.
-	
-1. In the source code you just inserted, replace *api_key* with the API key for your Web service obtained in Exercise 5, Step 5.
-
-1. Next, replace *web\_service\_url* with the URL of your Web service obtained in Exercise 5, Step 7.
-
-1. Go to the **Build** menu at the top of the Visual Studio window and use the **Build Solution** command to build the solution. Correct any build errors that are reported, and then press **Ctrl+F5** to launch the app. Confirm that it looks like this:
-
-    ![The MLClient app](Images/mlclient-app-1.png)
-
-    _The MLClient app_
-
-Congratulations! You just built a universal Windows app that relies on Azure Machine Learning for intelligence. The final task is to try it out and see how intelligent the app really is.
-
+Congratulations! You built an Electron application that relies on Azure Machine Learning for intelligence. The final task is to try it out and see how intelligent the app really is.
+         
 <a name="Exercise7"></a>
 ## Exercise 7: Test the model
 
-MLClient puts a graphical front end on Web-service calls. You draw a digit into the grid of squares by dragging a finger, pen, or mouse over the squares. Clicking the **Submit** button creates an array of 64 values (one per square, and one for each of the 64 feature columns in the training dataset), serializes it into JSON, and passes it to the Web service. The app deserializes the JSON that comes back and displays the result. In essence, MLClient provides a highly visual way to gauge the accuracy of your ML model.
+The Electron application puts a graphical front end on Web-service calls. You draw a digit into the grid of squares by dragging a mouse over the squares. Clicking the **Submit** button creates an array of 64 values (one per square, and one for each of the 64 feature columns in the training dataset), serializes it into JSON, and passes it to the Web service. The app deserializes the JSON that comes back and displays the result. In essence, the Electron client provides a highly visual way to gauge the accuracy of your ML model.
+
+1. Run the application by executing the following command in the Command Prompt or terminal window:
+
+    ```
+    npm run electron
+    ```
+
+    > An alternative is to run the command **npm start**, which starts the application and also watches for changes in the TypeScript files, recompiling them when they change. This ensures that changes to your code will be reflected in the running application without requiring a manual restart.
 
 1. Use your mouse to sketch a "7" into the grid, similar to the one shown below. Then click the **Submit** button.
 
-    ![Testing the app](Images/mlclient-app-2.png)
+    ![Testing the app](Images/node-mlclient-app-2.png)
 
     _Testing the app_
 
-1. In a moment, a popup window will appear telling you what digit you sketched. Is it correct?
+1. In a moment, a message at the bottom of the window will appear telling you what digit you sketched. Is it correct?
 
-    ![Azure ML's response](Images/it-works.png)
+    ![Azure ML's response](Images/node-it-works.png)
 
     _Azure ML's response_
 
 1. Click the **Clear** button to clear the grid and try a few other digits. You'll probably find that the model you built is better at identifying some digits than others, and that you get the best results when the digits you draw fill the expanse of the grid as much as possible.
 
-	> The incorrect answers are partly the result of the relatively small dataset you trained the model with (the dataset was roughly 0.5 MB, which is small by big-data standards), and partly due to the fact that the onscreen grid MLClient displays uses only 1/16th the resolution of the scans that the model was trained with. Nonetheless, it's a pretty impressive feat for an app to perform basic OCR in this manner. And it's indicative of the kinds of apps you can build when you have Azure Machine Learning doing the heavy lifting.
-
-1. Recall that one of the benefits of the Universal Windows Platform is that apps can run on a variety of devices. To see how MLClient would look on a tablet, select **Simulator** from the drop-down list of devices under the menu bar.
-
-    ![Selecting simulator output](Images/switch-to-simulator.png)
-
-    _Switching from Local Machine to the Windows Simulator_
-
-1. Now press **Ctrl+F5** to launch the app in the simulator.
-
-    ![MLClient on a tablet](Images/simulator.png)
-
-    _MLClient on a tablet_
-
-Typically, a developer does a little extra work to optimize the way a UWP app is displayed on different devices. That's beyond the scope of this lab, but something to be aware of if you plan to use UWP apps in your work or business. [Here's a video](https://channel9.msdn.com/Series/Windows-10-development-for-absolute-beginners/UWP-038-Working-with-Adaptive-Layout) with information about using adaptive layouts to make a UWP app look great on a wide range of devices.
+Any incorrect answers are partly the result of the relatively small dataset you trained the model with (the dataset was roughly 0.5 MB, which is small by big-data standards), and partly due to the fact that the onscreen grid display uses only 1/16th the resolution of the scans that the model was trained with. Nonetheless, it's a pretty impressive feat for an app to perform basic OCR in this manner. And it's indicative of the kinds of apps you can build when you have Azure Machine Learning doing the heavy lifting.
 
 ## Summary
 

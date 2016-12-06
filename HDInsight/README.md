@@ -22,6 +22,7 @@ In this hands-on lab, you will learn how to:
 -   Work with content stored in Azure Blob Storage and accessed by the Spark cluster as an HDFS volume
 -   Use a Jupyter notebook to interactively explore a large dataset
 -   Use a Jupyter notebook to develop and train a machine-learning model
+-   Delete a Spark cluster to avoid incurring unnecessary charges
 
 <a name="Prerequisites"></a>
 ### Prerequisites ###
@@ -42,6 +43,7 @@ This hands-on lab includes the following exercises:
 - [Exercise 3: Work with Jupyter notebooks](#Exercise3)
 - [Exercise 4: Interactively explore data in Spark](#Exercise4)
 - [Exercise 5: Use Jupyter to develop a machine-learning model](#Exercise5)
+- [Exercise 6: Remove the HDInsight Spark cluster](#Exercise6)
 
 Estimated time to complete this lab: **60** minutes.
 
@@ -220,6 +222,21 @@ Your Azure HDInsight Spark cluster includes several libraries from which you can
 
 Once you have completed the steps in the notebook, close the browser window in which the notebook is displayed and return to the Azure Portal.
 
+<a name="Exercise6"></a>
+## Exercise 6: Remove the HDInsight Spark cluster ##
+
+When you are finished using an HDInsight Spark cluster, you should delete it because you are charged for it while it exists, regardless of whether it's doing any work. In this exercise, you will delete the resource group created in [Exercise 1](#Exercise1) when you created the cluster. Deleting the resource group deletes everything in it and prevents any further charges from being incurred for it.
+
+1. In the Azure Portal, open the blade for the "SparkLabResourceGroup" resource group that holds the cluster. Then click the **Delete** button at the top of the blade.
+
+	![Deleting a resource group](Images/delete-resource-group.png)
+
+	_Deleting a resource group_
+
+1. For safety, you are required to type in the resource group's name. (Once deleted, a resource group cannot be recovered.) Type the name of the resource group. Then click the **Delete** button to remove all traces of this lab from your account.
+
+After a few minutes, the cluster and all of its resources will be deleted. Billing stops when you click the **Delete** button, so you're not charged for the time required to delete the cluster. Similarly, bulling doesn't start until a cluster is fully and successfully deployed.
+
 ## Summary ##
 
 Here is a summary of what you learned in this lab:
@@ -228,6 +245,7 @@ Here is a summary of what you learned in this lab:
 -   The Azure Portal makes it easy to create, configure, and delete HDInsight Spark clusters
 -   HDInsight Spark clusters come with Jupyter preinstalled
 -   Jupyter notebooks provide a powerful means for querying, analyzing, and visualizing data
+-   HDInsight Spark clusters should be deleted when they're no longer needed to avoid incurring unwanted charges
 
 With Apache Spark for Azure HDInsight, high-performance computing clusters with all the tools you need to handle big data are just a few button clicks away. It's just one example of why cloud computing is changing the face of research.
 
